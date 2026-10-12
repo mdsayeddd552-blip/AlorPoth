@@ -3,42 +3,49 @@ name: Build AlorPoth APK
 "on": [workflow_dispatch, push]
 
 permissions:
-  contents: read
+contents: read
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+build:
+runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+  - name: Set up Java
+    uses: actions/setup-java@v5
+    with:
+      distribution: temurin
+      java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+  - name: Set up Android SDK
+    uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+  - name: Accept Android SDK licenses
+    run: yes | sdkmanager --licenses
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
+  - name: Install Android SDK
+    run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Extract project
-        run: unzip AlorPoth_Android_Project.zip -d project
+  - name: Set up Gradle
+    uses: gradle/actions/setup-gradle@v4
+    with:
+      gradle-version: '8.9'
 
-      - name: Build APK
-        working-directory: project
-        run: gradle assembleDebug
+  - name: Extract project
+    run: |
+      test -f AlorPoth_Android_Project.zip
+      unzip -o AlorPoth_Android_Project.zip -d project
+      test -f project/app/build.gradle || test -f project/app/build.gradle.kts
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: AlorPoth-APK
-          path: project/app/build/outputs/apk/debug/*.apk
+  - name: Build APK
+    working-directory: project
+    run: gradle assembleDebug
+
+  - name: Upload APK
+    uses: actions/upload-artifact@v4
+    with:
+      name: AlorPoth-APK
+      path: project/app/build/outputs/apk/debug/*.apk
+      if-no-files-found: error
