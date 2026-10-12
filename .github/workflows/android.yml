@@ -1,6 +1,6 @@
 name: Build AlorPoth APK
 
-on:
+"on":
   workflow_dispatch:
   
 
